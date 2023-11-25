@@ -1,10 +1,17 @@
 package com.example.aston_intensiv_2.custom_views
 
+import android.animation.AnimatorSet
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.RectF
 import android.util.AttributeSet
+import android.util.Log
+import android.view.MotionEvent
 import android.view.View
+import android.view.animation.AccelerateDecelerateInterpolator
+import androidx.core.animation.doOnEnd
+import androidx.core.animation.doOnStart
 import kotlin.random.Random
 
 class SpinningWheel @JvmOverloads constructor(
@@ -13,6 +20,15 @@ class SpinningWheel @JvmOverloads constructor(
 
     private var pieData: PieData? = null
     private val oval = RectF()
+    private val spinningAnimator = ValueAnimator.ofFloat()
+    private val animateSpinning = AnimatorSet()
+    private var spinningWheelState = SpinningWheelState.IDLE
+    private var rotationAngle = 0f
+    private var animationResultAngle = 0f
+
+    init {
+        setupAnimations()
+    }
 
     fun setData(pieData: PieData) {
         this.pieData = pieData
@@ -21,7 +37,7 @@ class SpinningWheel @JvmOverloads constructor(
     }
 
     private fun setPieSliceDimensions() {
-        var lastAngle = getRandomStartAngle()
+        var lastAngle = 0f
         pieData?.pieSlices?.let { data ->
             data.forEach {
                 it.value.startAngle = lastAngle
@@ -30,8 +46,6 @@ class SpinningWheel @JvmOverloads constructor(
             }
         }
     }
-
-    private fun getRandomStartAngle() = Random.nextFloat() * 360
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
@@ -52,6 +66,8 @@ class SpinningWheel @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+        Log.d("@@@", "onDraw: $rotationAngle")
+        canvas.rotate(rotationAngle, width / 2f, height / 2f)
         pieData?.pieSlices?.let { slices ->
             slices.forEach {
                 canvas.drawArc(
@@ -63,5 +79,53 @@ class SpinningWheel @JvmOverloads constructor(
                 )
             }
         }
+    }
+
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        if (event?.action == MotionEvent.ACTION_DOWN) return true
+        if (event?.action == MotionEvent.ACTION_UP) {
+            when (spinningWheelState) {
+                SpinningWheelState.IDLE -> animateSpinning()
+                SpinningWheelState.ACTIVE -> {
+                    //nothing
+                }
+            }
+        }
+        return super.onTouchEvent(event)
+    }
+
+    private fun setupAnimations() {
+        spinningAnimator.duration = ANIMATION_DURATION
+        spinningAnimator.interpolator = AccelerateDecelerateInterpolator()
+        spinningAnimator.addUpdateListener {
+            rotationAngle = (it.animatedValue as Float)
+            requestLayout()
+            invalidate()
+        }
+        spinningAnimator.doOnStart {
+            spinningWheelState = SpinningWheelState.ACTIVE
+        }
+        spinningAnimator.doOnEnd {
+            spinningWheelState = SpinningWheelState.IDLE
+        }
+        animateSpinning.play(spinningAnimator)
+    }
+
+    private fun animateSpinning() {
+        animationResultAngle = getRandomSpinningResult()
+        spinningAnimator.setFloatValues(0f, animationResultAngle)
+        animateSpinning.start()
+    }
+
+    private fun getRandomSpinningResult() = Random.nextFloat() * 3600f
+
+
+    enum class SpinningWheelState {
+        IDLE,
+        ACTIVE
+    }
+
+    companion object {
+        private const val ANIMATION_DURATION = 5_000L
     }
 }
