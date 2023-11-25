@@ -6,7 +6,6 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.RectF
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
@@ -25,6 +24,7 @@ class SpinningWheel @JvmOverloads constructor(
     private var spinningWheelState = SpinningWheelState.IDLE
     private var rotationAngle = 0f
     private var animationResultAngle = 0f
+    private var doOnAnimationEnd: (winner: String) -> Unit = {}
 
     init {
         setupAnimations()
@@ -34,6 +34,10 @@ class SpinningWheel @JvmOverloads constructor(
         this.pieData = pieData
         setPieSliceDimensions()
         invalidate()
+    }
+
+    fun setDoOnAnimationEnd(doOnAnimationEnd: (winner: String) -> Unit) {
+        this.doOnAnimationEnd = doOnAnimationEnd
     }
 
     private fun setPieSliceDimensions() {
@@ -117,7 +121,7 @@ class SpinningWheel @JvmOverloads constructor(
     private fun calculateWinner() {
         pieData?.pieSlices?.forEach {
             if (it.value.startAngle <= 270 && it.value.startAngle + it.value.sweepAngle > 270) {
-                Log.d("@@@", it.value.name)
+                doOnAnimationEnd(it.value.name)
             }
         }
     }

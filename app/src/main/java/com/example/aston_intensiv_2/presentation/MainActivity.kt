@@ -3,6 +3,7 @@ package com.example.aston_intensiv_2.presentation
 import android.graphics.Color
 import android.graphics.Paint
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.example.aston_intensiv_2.custom_views.PieData
 import com.example.aston_intensiv_2.databinding.ActivityMainBinding
@@ -23,7 +24,12 @@ class MainActivity : AppCompatActivity() {
         getColorList().forEach {
             pieData.add(it.first, it.second)
         }
-        binding.spinningWheel.setData(pieData)
+        binding.spinningWheel.apply {
+            setData(pieData)
+            setDoOnAnimationEnd { winner ->
+                Log.d("@@@", "initPieData: $winner")
+            }
+        }
     }
 
     private fun getColorList() = listOf(
