@@ -66,7 +66,6 @@ class SpinningWheel @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        Log.d("@@@", "onDraw: $rotationAngle")
         canvas.rotate(rotationAngle, width / 2f, height / 2f)
         pieData?.pieSlices?.let { slices ->
             slices.forEach {
@@ -107,8 +106,28 @@ class SpinningWheel @JvmOverloads constructor(
         }
         spinningAnimator.doOnEnd {
             spinningWheelState = SpinningWheelState.IDLE
+            updatePieData()
+            rotationAngle = 0f
+            invalidate()
+            calculateWinner()
         }
         animateSpinning.play(spinningAnimator)
+    }
+
+    private fun calculateWinner() {
+        pieData?.pieSlices?.forEach {
+            if (it.value.startAngle <= 270 && it.value.startAngle + it.value.sweepAngle > 270) {
+                Log.d("@@@", it.value.name)
+            }
+        }
+    }
+
+    private fun updatePieData() {
+        pieData?.pieSlices?.let { data ->
+            data.forEach {
+                it.value.startAngle = (it.value.startAngle + animationResultAngle) % 360
+            }
+        }
     }
 
     private fun animateSpinning() {
