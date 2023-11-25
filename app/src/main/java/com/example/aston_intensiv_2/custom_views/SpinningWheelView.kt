@@ -9,6 +9,7 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.animation.LinearInterpolator
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import kotlin.random.Random
@@ -19,15 +20,20 @@ class SpinningWheelView @JvmOverloads constructor(
 
     private var pieData: PieData? = null
     private val oval = RectF()
+    private var initialHeight: Int? = null
     private val spinningAnimator = ValueAnimator.ofFloat()
     private val animateSpinning = AnimatorSet()
+    private val scalingAnimator = ValueAnimator.ofFloat()
+    private val animateScaling = AnimatorSet()
     private var spinningWheelState = SpinningWheelState.IDLE
     private var rotationAngle = 0f
+    private var scale = 0.5f
     private var animationResultAngle = 0f
     private var doOnAnimationEnd: (winner: String) -> Unit = {}
 
     init {
-        setupAnimations()
+        setupSpinningAnimation()
+        setupScalingAnimation()
     }
 
     fun setData(pieData: PieData) {
@@ -40,6 +46,10 @@ class SpinningWheelView @JvmOverloads constructor(
         this.doOnAnimationEnd = doOnAnimationEnd
     }
 
+    fun setScale(scale: Float) {
+        animateScaling(scale)
+    }
+
     private fun setPieSliceDimensions() {
         var lastAngle = 0f
         pieData?.pieSlices?.let { data ->
@@ -49,6 +59,12 @@ class SpinningWheelView @JvmOverloads constructor(
                 lastAngle += it.value.sweepAngle
             }
         }
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        if (initialHeight == null) initialHeight = layoutParams.height
+        layoutParams.height = (initialHeight!! * scale).toInt()
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -89,15 +105,13 @@ class SpinningWheelView @JvmOverloads constructor(
         if (event?.action == MotionEvent.ACTION_UP) {
             when (spinningWheelState) {
                 SpinningWheelState.IDLE -> animateSpinning()
-                SpinningWheelState.ACTIVE -> {
-                    //nothing
-                }
+                SpinningWheelState.ACTIVE -> {}
             }
         }
         return super.onTouchEvent(event)
     }
 
-    private fun setupAnimations() {
+    private fun setupSpinningAnimation() {
         spinningAnimator.duration = ANIMATION_DURATION
         spinningAnimator.interpolator = AccelerateDecelerateInterpolator()
         spinningAnimator.addUpdateListener {
@@ -116,6 +130,19 @@ class SpinningWheelView @JvmOverloads constructor(
             calculateWinner()
         }
         animateSpinning.play(spinningAnimator)
+    }
+
+    private fun setupScalingAnimation() {
+        scalingAnimator.duration = 0L
+        scalingAnimator.interpolator = LinearInterpolator()
+        scalingAnimator.addUpdateListener {
+            initialHeight?.let { height ->
+                layoutParams.height = (height * (it.animatedValue as Float)).toInt()
+            }
+            requestLayout()
+            invalidate()
+        }
+        animateScaling.play(scalingAnimator)
     }
 
     private fun calculateWinner() {
@@ -138,6 +165,12 @@ class SpinningWheelView @JvmOverloads constructor(
         animationResultAngle = getRandomSpinningResult()
         spinningAnimator.setFloatValues(0f, animationResultAngle)
         animateSpinning.start()
+    }
+
+    private fun animateScaling(newScale: Float) {
+        scalingAnimator.setFloatValues(scale, newScale)
+        animateScaling.start()
+        scale = newScale
     }
 
     private fun getRandomSpinningResult() = Random.nextFloat() * 3600f

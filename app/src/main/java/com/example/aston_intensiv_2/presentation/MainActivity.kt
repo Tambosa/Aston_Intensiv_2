@@ -5,6 +5,8 @@ import android.graphics.Paint
 import android.os.Bundle
 import android.view.ViewGroup.LayoutParams
 import android.widget.ImageView
+import android.widget.SeekBar
+import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.appcompat.app.AppCompatActivity
 import coil.load
 import coil.request.CachePolicy
@@ -23,6 +25,23 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         initPieData()
         initButton()
+        initSeekbar()
+    }
+
+    private fun initSeekbar() {
+        binding.seekbar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
+            override fun onProgressChanged(seekbar: SeekBar?, progress: Int, fromUser: Boolean) {
+                binding.spinningWheel.setScale(progress / 100f)
+            }
+
+            override fun onStartTrackingTouch(p0: SeekBar?) {
+//          nothing
+            }
+
+            override fun onStopTrackingTouch(p0: SeekBar?) {
+//          nothing
+            }
+        })
     }
 
     private fun initButton() {
