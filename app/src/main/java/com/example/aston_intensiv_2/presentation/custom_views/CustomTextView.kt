@@ -1,4 +1,4 @@
-package com.example.aston_intensiv_2.custom_views
+package com.example.aston_intensiv_2.presentation.custom_views
 
 import android.content.Context
 import android.graphics.Canvas

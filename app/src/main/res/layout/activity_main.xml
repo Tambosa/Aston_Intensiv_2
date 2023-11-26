@@ -29,7 +29,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/seekbar" />
 
-    <com.example.aston_intensiv_2.custom_views.SpinningWheelView
+    <com.example.aston_intensiv_2.presentation.custom_views.spinning_wheel.SpinningWheelView
         android:id="@+id/spinning_wheel"
         android:layout_width="0dp"
         android:layout_height="300dp"
